@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
 import pandas as pd
 
 app = FastAPI()
@@ -8,14 +9,18 @@ df = pd.read_csv("creditos_dummy.csv", dtype=str)
 df["nombre_norm"] = df["nombre persona"].str.strip().str.lower()
 df["id_norm"] = df["id"].astype(str).str.strip()
 
+class ClienteRequest(BaseModel):
+    nombre: str
+    identificacion: str
+
 @app.get("/")
 def root():
     return {"status": "ok", "message": "DummyClient API está corriendo"}
 
-@app.get("/buscar_cliente")
-def buscar_cliente(nombre: str, identificacion: str):
-    nombre = nombre.strip().lower()
-    identificacion = str(identificacion).strip()
+@app.post("/buscar_cliente")
+def buscar_cliente(req: ClienteRequest):
+    nombre = req.nombre.strip().lower()
+    identificacion = str(req.identificacion).strip()
 
     cliente = df[(df["nombre_norm"] == nombre) & (df["id_norm"] == identificacion)]
 
@@ -29,7 +34,7 @@ def buscar_cliente(nombre: str, identificacion: str):
             "nombre": row["nombre persona"],
             "id": str(row["id"]),
             "credit_amount": float(row["credit amount"]),
-            "credit_date": row["credit date"],
+            "credit_date": row["credit date"],  # string YYYY-MM-DD
             "credit_interest": float(row["credit interest"])
         }
     }
