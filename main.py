@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 import pandas as pd
+from zoneinfo import ZoneInfo 
+from datetime import datetime
 
 app = FastAPI()
 
@@ -9,6 +11,10 @@ df = pd.read_csv("creditos_dummy.csv", dtype=str)
 df["nombre_norm"] = df["nombre persona"].str.strip().str.lower()
 df["id_norm"] = df["id"].astype(str).str.strip()
 
+def hoy_bogota_iso():
+    return datetime.now(ZoneInfo("America/Bogota")).date().isoformat()  # 'YYYY-MM-DD'
+
+
 class ClienteRequest(BaseModel):
     nombre: str
     identificacion: str
@@ -16,6 +22,11 @@ class ClienteRequest(BaseModel):
 @app.get("/")
 def root():
     return {"status": "ok", "message": "DummyClient API está corriendo"}
+
+@app.get("/now")
+def now_endpoint():
+    return {"today": hoy_bogota_iso(), "tz": "America/Bogota"}
+
 
 @app.post("/buscar_cliente")
 def buscar_cliente(req: ClienteRequest):
