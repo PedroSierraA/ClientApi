@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 import pandas as pd
-from zoneinfo import ZoneInfo 
+from zoneinfo import ZoneInfo
 from datetime import datetime
 
 app = FastAPI()
@@ -19,6 +19,19 @@ class ClienteRequest(BaseModel):
     nombre: str
     identificacion: str
 
+
+class ClienteResponse(BaseModel):
+    found: bool
+    cliente: dict = None
+    
+
+class ClienteDetalleResponse(BaseModel):
+    nombre: str
+    id: str
+    credit_amount: float
+    credit_date: str
+    credit_interest: float
+
 @app.get("/")
 def root():
     return {"status": "ok", "message": "DummyClient API está corriendo"}
@@ -31,6 +44,7 @@ def now_endpoint():
 @app.post("/buscar_cliente")
 def buscar_cliente(req: ClienteRequest):
     nombre = req.nombre.strip().lower()
+
     identificacion = str(req.identificacion).strip()
 
     cliente = df[(df["nombre_norm"] == nombre) & (df["id_norm"] == identificacion)]
@@ -39,13 +53,22 @@ def buscar_cliente(req: ClienteRequest):
         return {"found": False, "cliente": None}
 
     row = cliente.iloc[0]
+    credit_amount = row.get("credit amount")
+    credit_interest = row.get("credit interest")
+    mora = row.get("dias_mora")
+    monto_final = row.get("monto_final")
+    
+
     return {
         "found": True,
         "cliente": {
             "nombre": row["nombre persona"],
             "id": str(row["id"]),
-            "credit_amount": float(row["credit amount"]),
-            "credit_date": row["credit date"],  # string YYYY-MM-DD
-            "credit_interest": float(row["credit interest"])
+            "credit_amount": float(credit_amount) if credit_amount not in (None, "") else None,
+            "credit_date": row["credit date"],  # string M/D/YYYY
+            "credit_interest": float(credit_interest) if credit_interest not in (None, "") else None,
+            "dias_mora": int(mora) if mora not in (None, "") else None,
+            "monto_final": str(monto_final) if monto_final not in (None, "") else None
         }
     }
+
