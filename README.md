@@ -6,7 +6,7 @@ Diseñada para integrarse con un agente en Vapi a través de HTTP Tool.
 ## Endpoints
 
 - **GET /** → prueba de estado
-- **GET /buscar_cliente?nombre=<nombre>&identificacion=<id>**
+- **POST /buscar_cliente?nombre=<nombre>&identificacion=<id>**
   - Busca un cliente por nombre e identificación.
   - Respuesta:
     ```json
